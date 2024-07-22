@@ -12,6 +12,7 @@ class RHBA(models.Model):
     description_cve = models.TextField(blank=True, null=True, default="")
     criteria = models.TextField(blank=True, null=True, default="")
     packages = models.TextField(blank=True, null=True, default="")
+    criterion = models.TextField(blank=True, null=True, default="")
 
     class Meta:
         db_table = 'RHBA'

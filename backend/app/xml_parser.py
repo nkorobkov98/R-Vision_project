@@ -10,6 +10,7 @@ def parse_xml_content(xml_content):
         cves = []
         cvss_values = []
         cwe_values = []
+        package_versions = {}
 
         # Список для хранения описаний CVE с CVSS и CWE
         description_cve_list = []
@@ -30,6 +31,17 @@ def parse_xml_content(xml_content):
         cpe_list = [cpe.text for cpe in definition.findall('.//oval:cpe', ns)]
         description = definition.find('.//oval:description', ns).text
 
+        # Извлечение критериев и версий пакетов
+        criteria_list = []
+        for criteria in definition.findall('.//oval:criteria', ns):
+            for criterion in criteria.findall('.//oval:criterion', ns):
+                criterion_comment = criterion.attrib.get('comment', '')
+                criteria_list.append(criterion_comment)
+
+                if 'is earlier than' in criterion_comment:
+                    version = criterion_comment.split("is earlier than")[-1].strip()
+                    package_name = criterion_comment.split(" ")[0] 
+                    package_versions[package_name] = version 
         
         unique_packages = set()
         for bugzilla in definition.findall('.//oval:bugzilla', ns):
@@ -47,7 +59,8 @@ def parse_xml_content(xml_content):
             description=description,
             description_cve='; '.join(description_cve_list),  
             criteria=', '.join([criterion.attrib.get('comment', '') for criterion in definition.findall('.//oval:criterion', ns)]),
-            packages=', '.join(unique_packages)
+            packages=', '.join(unique_packages),
+            criterion=', '.join(f"{pkg}: {version}" for pkg, version in package_versions.items())  
         )
 
         # Сохранение экземпляра в базе данных
